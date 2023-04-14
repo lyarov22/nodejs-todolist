@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo List</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      header {
+        background-color: rgb(225, 100, 17);
+        color: #fff;
+        padding: 1rem;
+        text-align: center;
+      }
+      main {
+        margin: 1rem auto;
+        max-width: 600px;
+        padding: 1rem;
+      }
+      h1 {
+        font-size: 2rem;
+        margin: 0 0 1rem;
+        padding-top: 10px;
+      }
+      form {
+        display: flex;
+        margin-bottom: 1rem;
+      }
+      input[type="text"] {
+        flex: 1;
+        margin-right: 1rem;
+        padding: 0.5rem;
+  
+      }
+      input[type="submit"] {
+        background-color: #333;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        padding: 0.5rem;
+      }
+      input[type="submit"]:hover {
+        background-color: #555;
+      }
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      li {
+        border: 1px solid #ccc;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+      }
+      li.completed {
+        text-decoration: line-through;
+      }
+      button {
+        background-color: #f00;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        margin-left: 0.5rem;
+        padding: 0.5rem;
+      }
+      button:hover {
+        background-color: #d00;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Todo List</h1>
+    </header>
+    <main>
+      <form>
+        <input type="text" id="title" placeholder="Enter task title" />
+        <input type="submit" value="Add" />
+      </form>
+      <ul id="task-list"></ul>
+    </main>
+    <script>
+      const taskList = document.getElementById('task-list');
+      async function getTasks() {
+        const response = await fetch('/tasks');
+        const tasks = await response.json();
+        for (const task of tasks) {
+          const li = document.createElement('li');
+          li.textContent = task.title;
+          if (task.completed) {
+            li.classList.add('completed');
+          }
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = task.completed;
+          checkbox.addEventListener('change', async () => {
+            await fetch(`/tasks/${task._id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ completed: checkbox.checked }),
+            });
+            if (checkbox.checked) {
+              li.classList.add('completed');
+            } else {
+              li.classList.remove('completed');
+            }
+          });
+          const deleteButton = document.createElement('button');
+          deleteButton.textContent = 'Delete';
+          deleteButton.addEventListener('click', async () => {
+            await fetch(`/tasks/${task._id}`, {
+              method: 'DELETE',
+            });
+            li.remove();
+          });
+         
+          li.appendChild(checkbox);
+      li.appendChild(document.createTextNode(' '));
+      li.appendChild(deleteButton);
+      taskList.appendChild(li);
+    }
+  }
+  getTasks();
+  const form = document.querySelector('form');
+  const titleInput = document.getElementById('title');
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const response = await fetch('/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ title: titleInput.value }),
+    });
+    const task = await response.json();
+    const li = document.createElement('li');
+    li.textContent = task.title;
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.addEventListener('change', async () => {
+      await fetch(`/tasks/${task._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ completed: checkbox.checked }),
+      });
+      if (checkbox.checked) {
+        li.classList.add('completed');
+      } else {
+        li.classList.remove('completed');
+      }
+    });
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', async () => {
+      await fetch(`/tasks/${task._id}`, {
+        method: 'DELETE',
+      });
+      li.remove();
+    });
+    li.appendChild(checkbox);
+    li.appendChild(document.createTextNode(' '));
+    li.appendChild(deleteButton);
+    taskList.appendChild(li);
+    titleInput.value = '';
+  });
+</script>
+  </body>
+</html>
